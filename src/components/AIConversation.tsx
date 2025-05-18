@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { openai, getSystemPrompt } from '../config/openai';
+import { StreakDisplay } from './StreakDisplay';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -415,161 +416,164 @@ export default function AIConversation() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+    <div className="conversation-container">
+      <StreakDisplay />
+      <div className="flex flex-col h-full bg-gray-50">
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {messages.map((message, index) => (
             <div
-              className={`max-w-[80%] rounded-2xl p-4 ${
-                message.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-800 shadow-md'
-              }`}
+              key={index}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className="flex items-start space-x-3">
-                {message.role === 'assistant' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </div>
-                )}
-                <div className="flex-1">
-                  {message.isLoading ? (
-                    // Placeholder or typing indicator
-                    <div className="flex items-center">
-                      <div className="dot-spinner">
-                        <div className="dot-spinner__dot"></div>
-                        <div className="dot-spinner__dot"></div>
-                        <div className="dot-spinner__dot"></div>
-                        <div className="dot-spinner__dot"></div>
-                        <div className="dot-spinner__dot"></div>
-                        <div className="dot-spinner__dot"></div>
-                        <div className="dot-spinner__dot"></div>
-                        <div className="dot-spinner__dot"></div>
+              <div
+                className={`max-w-[80%] rounded-2xl p-4 ${
+                  message.role === 'user'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white text-gray-800 shadow-md'
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  {message.role === 'assistant' && (
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    {message.isLoading ? (
+                      // Placeholder or typing indicator
+                      <div className="flex items-center">
+                        <div className="dot-spinner">
+                          <div className="dot-spinner__dot"></div>
+                          <div className="dot-spinner__dot"></div>
+                          <div className="dot-spinner__dot"></div>
+                          <div className="dot-spinner__dot"></div>
+                          <div className="dot-spinner__dot"></div>
+                          <div className="dot-spinner__dot"></div>
+                          <div className="dot-spinner__dot"></div>
+                          <div className="dot-spinner__dot"></div>
+                        </div>
+                        <span className="ml-2 text-gray-500">Thinking...</span>
                       </div>
-                      <span className="ml-2 text-gray-500">Thinking...</span>
-                    </div>
-                  ) : (
-                    // Display actual message content
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  )}
-                  {message.imageUrl && (
-                    <div className="mt-4">
-                      <img 
-                        src={message.imageUrl} 
-                        alt="Generated illustration" 
-                        className="rounded-lg max-w-full h-auto shadow-md"
-                      />
-                    </div>
-                  )}
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs opacity-70">
-                      {message.timestamp.toLocaleTimeString()}
-                    </span>
-                    {message.role === 'assistant' && (
-                      <button
-                        onClick={() => speakMessage(message)}
-                        className={`ml-2 p-1 rounded-full hover:bg-gray-100 transition-colors ${
-                          message.isSpeaking ? 'text-blue-500' : 'text-gray-400'
-                        }`}
-                        title={message.isSpeaking ? 'Speaking...' : 'Speak message'}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 001.414 1.414m2.828-9.9a9 9 0 012.728-2.728" />
-                        </svg>
-                      </button>
+                    ) : (
+                      // Display actual message content
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                     )}
+                    {message.imageUrl && (
+                      <div className="mt-4">
+                        <img 
+                          src={message.imageUrl} 
+                          alt="Generated illustration" 
+                          className="rounded-lg max-w-full h-auto shadow-md"
+                        />
+                      </div>
+                    )}
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-xs opacity-70">
+                        {message.timestamp.toLocaleTimeString()}
+                      </span>
+                      {message.role === 'assistant' && (
+                        <button
+                          onClick={() => speakMessage(message)}
+                          className={`ml-2 p-1 rounded-full hover:bg-gray-100 transition-colors ${
+                            message.isSpeaking ? 'text-blue-500' : 'text-gray-400'
+                          }`}
+                          title={message.isSpeaking ? 'Speaking...' : 'Speak message'}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 001.414 1.414m2.828-9.9a9 9 0 012.728-2.728" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
 
-      {/* Voice Overlay */}
-      {isVoiceOverlayVisible && (
-        <div className="voice-overlay fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col items-center justify-center text-white z-50">
-          {/* We can add cool effects or animations here later */}
-          <div className="dot-spinner mb-4">
-             <div className="dot-spinner__dot"></div>
-             <div className="dot-spinner__dot"></div>
-             <div className="dot-spinner__dot"></div>
-             <div className="dot-spinner__dot"></div>
-             <div className="dot-spinner__dot"></div>
-             <div className="dot-spinner__dot"></div>
-             <div className="dot-spinner__dot"></div>
-             <div className="dot-spinner__dot"></div>
-           </div>
-           <p className="text-xl">
-             {isListening ? (
-               'Listening...' // While user is speaking
-             ) : isSpeakingAudio ? (
-               'Yapping...' // While AI is speaking audio
-             ) : isProcessing ? (
-               'Thinking...' // While waiting for AI response
-             ) : (
-               // Check if the AI's last message (if any) is currently speaking
-               messages.length > 0 && messages[messages.length - 1].isSpeaking ?
-               'Yapping...' : // While AI is speaking
-               'Yapping... Speak Now!' // AI is done, waiting for user
-             )}
-           </p>
-            {/* Add a stop button here later */}
-            <button
-              onClick={stopVoiceChat}
-              className="mt-8 px-6 py-2 border border-white rounded-full text-white hover:bg-white hover:text-gray-900 transition-colors"
-            >
-              Stop Yapping
-            </button>
-          </div>
-        )}
-
-      {/* Input Area */}
-      <div className="border-t bg-white p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex space-x-2">
-            <button
-              onClick={toggleListening}
-              className={`p-2 rounded-full transition-colors duration-200 ${isListening ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-600'}`}
-              title={isListening ? 'Stop listening' : 'Start voice input'}
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        {/* Voice Overlay */}
+        {isVoiceOverlayVisible && (
+          <div className="voice-overlay fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col items-center justify-center text-white z-50">
+            {/* We can add cool effects or animations here later */}
+            <div className="dot-spinner mb-4">
+               <div className="dot-spinner__dot"></div>
+               <div className="dot-spinner__dot"></div>
+               <div className="dot-spinner__dot"></div>
+               <div className="dot-spinner__dot"></div>
+               <div className="dot-spinner__dot"></div>
+               <div className="dot-spinner__dot"></div>
+               <div className="dot-spinner__dot"></div>
+               <div className="dot-spinner__dot"></div>
+             </div>
+             <p className="text-xl">
+               {isListening ? (
+                 'Listening...' // While user is speaking
+               ) : isSpeakingAudio ? (
+                 'Yapping...' // While AI is speaking audio
+               ) : isProcessing ? (
+                 'Thinking...' // While waiting for AI response
+               ) : (
+                 // Check if the AI's last message (if any) is currently speaking
+                 messages.length > 0 && messages[messages.length - 1].isSpeaking ?
+                 'Yapping...' : // While AI is speaking
+                 'Yapping... Speak Now!' // AI is done, waiting for user
+               )}
+             </p>
+              {/* Add a stop button here later */}
+              <button
+                onClick={stopVoiceChat}
+                className="mt-8 px-6 py-2 border border-white rounded-full text-white hover:bg-white hover:text-gray-900 transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(false)}
-              placeholder={isListening ? "Listening..." : "Type your message..."}
-              className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={isProcessing || isGeneratingImage}
-            />
-            <button
-              onClick={() => handleSendMessage(false)}
-              disabled={isProcessing || isGeneratingImage || !input.trim()}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
-            >
-              {isGeneratingImage ? 'Generating Image...' : 'Send'}
-            </button>
+                Stop Yapping
+              </button>
+            </div>
+          )}
+
+        {/* Input Area */}
+        <div className="border-t bg-white p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex space-x-2">
+              <button
+                onClick={toggleListening}
+                className={`p-2 rounded-full transition-colors duration-200 ${isListening ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-600'}`}
+                title={isListening ? 'Stop listening' : 'Start voice input'}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                  />
+                </svg>
+              </button>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(false)}
+                placeholder={isListening ? "Listening..." : "Type your message..."}
+                className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isProcessing || isGeneratingImage}
+              />
+              <button
+                onClick={() => handleSendMessage(false)}
+                disabled={isProcessing || isGeneratingImage || !input.trim()}
+                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
+              >
+                {isGeneratingImage ? 'Generating Image...' : 'Send'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

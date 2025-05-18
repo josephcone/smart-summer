@@ -1,4 +1,5 @@
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { StreakProvider } from './contexts/StreakContext'
 import Login from './pages/Login'
 import { userProfiles } from './config/profiles'
 import AIConversation from './components/AIConversation'
@@ -71,7 +72,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <StreakProvider>
+        <AppContent />
+      </StreakProvider>
     </AuthProvider>
   )
 }
