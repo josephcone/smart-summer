@@ -1,0 +1,29 @@
+import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { openai, getSystemPrompt } from '../config/openai';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  isSpeaking?: boolean;
+  imageUrl?: string;
+  id: string;
+  isLoading: boolean;
+}
+
+export default function AIConversation() {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isVoiceOverlayVisible, setIsVoiceOverlayVisible] = useState(false);
+  const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Rest of the file remains the same...
+} 
