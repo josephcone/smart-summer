@@ -64,7 +64,7 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const streakRef = doc(db, 'streaks', user.uid);
       const streakCount = calculateStreak(streak.lastActivityDate);
       
-      const updatedStreak: Streak = {
+      const updatedStreak = {
         ...streak,
         currentStreak: streakCount === 0 ? 1 : streak.currentStreak + 1,
         longestStreak: Math.max(streak.longestStreak, streak.currentStreak + 1),
@@ -75,7 +75,7 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         ]
       };
 
-      await updateDoc(streakRef, updatedStreak);
+      await updateDoc(streakRef, updatedStreak as any);
       setStreak(updatedStreak);
       setAchievements(updateStreakAchievements(updatedStreak.currentStreak, achievements));
     } catch (error) {

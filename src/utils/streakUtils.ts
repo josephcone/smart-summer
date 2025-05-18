@@ -1,4 +1,4 @@
-import { Streak, StreakAchievement } from '../types/streak';
+import { StreakAchievement } from '../types/streak';
 
 export const calculateStreak = (lastActivityDate: string): number => {
   const lastDate = new Date(lastActivityDate);
