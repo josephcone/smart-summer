@@ -94,7 +94,15 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
 
         console.log('Saving updated streak:', updatedStreak);
-        await updateDoc(streakRef, updatedStreak);
+        // Convert to plain object for Firestore
+        const streakData = {
+          userId: updatedStreak.userId,
+          currentStreak: updatedStreak.currentStreak,
+          longestStreak: updatedStreak.longestStreak,
+          lastActivityDate: updatedStreak.lastActivityDate,
+          streakHistory: updatedStreak.streakHistory
+        };
+        await updateDoc(streakRef, streakData);
         setStreak(updatedStreak);
         setAchievements(prevAchievements => 
           updateStreakAchievements(prevAchievements, updatedStreak.currentStreak)
