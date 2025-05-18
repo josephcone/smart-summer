@@ -35,8 +35,18 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const streakDoc = await getDoc(streakRef);
 
         if (streakDoc.exists()) {
-          console.log('Found existing streak:', streakDoc.data());
-          const streakData = streakDoc.data() as Streak;
+          const data = streakDoc.data();
+          console.log('Found existing streak:', data);
+          
+          // Ensure the data matches our Streak type
+          const streakData: Streak = {
+            userId: user.uid,
+            currentStreak: data.currentStreak || 0,
+            longestStreak: data.longestStreak || 0,
+            lastActivityDate: data.lastActivityDate || new Date().toISOString(),
+            streakHistory: Array.isArray(data.streakHistory) ? data.streakHistory : []
+          };
+          
           setStreak(streakData);
           setAchievements(prevAchievements => 
             updateStreakAchievements(prevAchievements, streakData.currentStreak)
@@ -50,8 +60,14 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             lastActivityDate: new Date().toISOString(),
             streakHistory: []
           };
-          await setDoc(streakRef, newStreak);
-          setStreak(newStreak);
+          
+          try {
+            await setDoc(streakRef, newStreak);
+            console.log('Successfully created new streak');
+            setStreak(newStreak);
+          } catch (error) {
+            console.error('Error creating new streak:', error);
+          }
         }
       } catch (error) {
         console.error('Error loading streak:', error);
@@ -94,19 +110,24 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
 
         console.log('Saving updated streak:', updatedStreak);
-        // Convert to plain object for Firestore
-        const streakData = {
-          userId: updatedStreak.userId,
-          currentStreak: updatedStreak.currentStreak,
-          longestStreak: updatedStreak.longestStreak,
-          lastActivityDate: updatedStreak.lastActivityDate,
-          streakHistory: updatedStreak.streakHistory
-        };
-        await updateDoc(streakRef, streakData);
-        setStreak(updatedStreak);
-        setAchievements(prevAchievements => 
-          updateStreakAchievements(prevAchievements, updatedStreak.currentStreak)
-        );
+        try {
+          // Convert to plain object for Firestore
+          const streakData = {
+            userId: updatedStreak.userId,
+            currentStreak: updatedStreak.currentStreak,
+            longestStreak: updatedStreak.longestStreak,
+            lastActivityDate: updatedStreak.lastActivityDate,
+            streakHistory: updatedStreak.streakHistory
+          };
+          await updateDoc(streakRef, streakData);
+          console.log('Successfully updated streak in Firestore');
+          setStreak(updatedStreak);
+          setAchievements(prevAchievements => 
+            updateStreakAchievements(prevAchievements, updatedStreak.currentStreak)
+          );
+        } catch (error) {
+          console.error('Error saving streak to Firestore:', error);
+        }
       } else {
         console.log('Already have activity today, not updating streak');
       }
