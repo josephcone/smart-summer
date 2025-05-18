@@ -47,7 +47,7 @@ export const StreakDisplay: React.FC = () => {
       </div>
       
       <div className="weekly-calendar">
-        {weeklyActivity.map(({ date, hasActivity }, index) => {
+        {weeklyActivity.map(({ date, hasActivity }) => {
           const dayOfWeek = DAYS_OF_WEEK[new Date(date).getDay()];
           const isToday = new Date(date).toDateString() === new Date().toDateString();
           
