@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface Profile {
   id: string;
   name: string;

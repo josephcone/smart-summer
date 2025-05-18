@@ -16,10 +16,10 @@ export default function AIConversation() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
   const [isVoiceOverlayVisible, setIsVoiceOverlayVisible] = useState(false);
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -259,7 +259,6 @@ export default function AIConversation() {
     }
 
     setIsProcessing(true);
-    setTypingMessageId(aiPlaceholderId);
 
     // If initiated by voice, show the overlay
     if (fromVoice) {
@@ -325,7 +324,6 @@ export default function AIConversation() {
 
       // Replace the placeholder with the actual message
       setMessages(prev => prev.map(msg => msg.id === aiPlaceholderId ? aiMessage : msg));
-      setTypingMessageId(null); // Clear typing indicator
 
       // Only speak if the user's input was from voice
       if (fromVoice) {
@@ -351,7 +349,6 @@ export default function AIConversation() {
       };
       // Replace the placeholder with the error message
       setMessages(prev => prev.map(msg => msg.id === aiPlaceholderId ? errorMessage : msg));
-      setTypingMessageId(null); // Clear typing indicator
       // Hide overlay on error, or perhaps show an error state within overlay
       setIsVoiceOverlayVisible(false);
     } finally {
