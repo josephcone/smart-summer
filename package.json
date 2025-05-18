@@ -18,13 +18,13 @@
   "description": "",
   "dependencies": {
     "@types/node": "^20.11.30",
-    "firebase": "^10.8.0",
+    "autoprefixer": "^10.4.18",
+    "firebase": "^10.14.1",
     "openai": "^4.28.0",
+    "postcss": "^8.4.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8.4.35",
-    "autoprefixer": "^10.4.18"
+    "tailwindcss": "^3.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",
