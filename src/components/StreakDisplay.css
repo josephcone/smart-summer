@@ -12,6 +12,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .streak-count {
@@ -31,6 +32,54 @@
 .streak-message {
   font-size: 1.1rem;
   text-align: center;
+}
+
+.weekly-calendar {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-day.today {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.day-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.day-indicator {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+}
+
+.day-indicator.completed {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
 }
 
 .achievement-badge {
