@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 import { Streak, StreakAchievement, STREAK_ACHIEVEMENTS } from '../types/streak';
@@ -21,21 +21,23 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadStreak = async () => {
-      if (!user) {
-        console.log('No user, setting streak to null');
-        setStreak(null);
-        setIsLoading(false);
-        return;
-      }
+    if (!user) {
+      console.log('No user, setting streak to null');
+      setStreak(null);
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        console.log('Loading streak for user:', user.uid);
-        const streakRef = doc(db, 'streaks', user.uid);
-        const streakDoc = await getDoc(streakRef);
+    console.log('Setting up streak listener for user:', user.uid);
+    const streakRef = doc(db, 'streaks', user.uid);
 
-        if (streakDoc.exists()) {
-          const data = streakDoc.data();
+    // Set up real-time listener
+    const unsubscribe = onSnapshot(
+      streakRef,
+      (doc) => {
+        console.log('Streak snapshot received');
+        if (doc.exists()) {
+          const data = doc.data();
           console.log('Found existing streak:', data);
           
           // Ensure the data matches our Streak type
@@ -61,22 +63,28 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             streakHistory: []
           };
           
-          try {
-            await setDoc(streakRef, newStreak);
-            console.log('Successfully created new streak');
-            setStreak(newStreak);
-          } catch (error) {
-            console.error('Error creating new streak:', error);
-          }
+          setDoc(streakRef, newStreak)
+            .then(() => {
+              console.log('Successfully created new streak');
+              setStreak(newStreak);
+            })
+            .catch((error) => {
+              console.error('Error creating new streak:', error);
+            });
         }
-      } catch (error) {
-        console.error('Error loading streak:', error);
-      } finally {
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('Error in streak listener:', error);
         setIsLoading(false);
       }
-    };
+    );
 
-    loadStreak();
+    // Cleanup listener on unmount
+    return () => {
+      console.log('Cleaning up streak listener');
+      unsubscribe();
+    };
   }, [user]);
 
   const updateStreak = async (action: string) => {
