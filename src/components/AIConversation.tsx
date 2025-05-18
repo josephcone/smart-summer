@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { openai, getSystemPrompt } from '../config/openai';
 import { StreakDisplay } from './StreakDisplay';
+import { useStreak } from '../contexts/StreakContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,6 +16,7 @@ interface Message {
 
 export default function AIConversation() {
   const { user } = useAuth();
+  const { updateStreak } = useStreak();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -172,6 +174,9 @@ export default function AIConversation() {
   const generateImage = async (prompt: string) => {
     setIsGeneratingImage(true);
     try {
+      // Update streak when generating an image
+      await updateStreak('Generated an image');
+
       console.log('Attempting image generation with prompt:', prompt);
       
       const response = await openai.images.generate({
@@ -231,6 +236,9 @@ export default function AIConversation() {
       console.log('handleSendMessage: Message content empty or user not logged in. Returning.');
       return;
     }
+
+    // Update streak when sending a message
+    await updateStreak('Sent a message');
 
     console.log('handleSendMessage: Sending message.', { fromVoice, messageToSend, user });
 
