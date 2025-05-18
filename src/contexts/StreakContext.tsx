@@ -8,8 +8,8 @@ import { calculateStreak, updateStreakAchievements } from '../utils/streakUtils'
 interface StreakContextType {
   streak: Streak | null;
   achievements: StreakAchievement[];
-  updateStreak: (activity: string) => Promise<void>;
   isLoading: boolean;
+  updateStreak: (action: string) => Promise<void>;
 }
 
 const StreakContext = createContext<StreakContextType | undefined>(undefined);
@@ -23,20 +23,26 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const loadStreak = async () => {
       if (!user) {
+        console.log('No user, setting streak to null');
+        setStreak(null);
         setIsLoading(false);
         return;
       }
 
       try {
+        console.log('Loading streak for user:', user.uid);
         const streakRef = doc(db, 'streaks', user.uid);
         const streakDoc = await getDoc(streakRef);
 
         if (streakDoc.exists()) {
+          console.log('Found existing streak:', streakDoc.data());
           const streakData = streakDoc.data() as Streak;
           setStreak(streakData);
-          setAchievements(updateStreakAchievements(streakData.currentStreak, achievements));
+          setAchievements(prevAchievements => 
+            updateStreakAchievements(prevAchievements, streakData.currentStreak)
+          );
         } else {
-          // Initialize new streak
+          console.log('No streak found, creating new one');
           const newStreak: Streak = {
             userId: user.uid,
             currentStreak: 0,
@@ -57,34 +63,52 @@ export const StreakProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     loadStreak();
   }, [user]);
 
-  const updateStreak = async (activity: string) => {
-    if (!user || !streak) return;
+  const updateStreak = async (action: string) => {
+    if (!user || !streak) {
+      console.log('Cannot update streak: no user or streak data');
+      return;
+    }
 
     try {
+      console.log('Updating streak for action:', action);
       const streakRef = doc(db, 'streaks', user.uid);
-      const streakCount = calculateStreak(streak.lastActivityDate);
+      const today = new Date().toISOString().split('T')[0];
       
-      const updatedStreak = {
-        ...streak,
-        currentStreak: streakCount === 0 ? 1 : streak.currentStreak + 1,
-        longestStreak: Math.max(streak.longestStreak, streak.currentStreak + 1),
-        lastActivityDate: new Date().toISOString(),
-        streakHistory: [
-          ...streak.streakHistory,
-          { date: new Date().toISOString(), activity }
-        ]
-      };
+      // Check if we already have activity for today
+      const hasActivityToday = streak.streakHistory.some(
+        activity => activity.date.startsWith(today)
+      );
 
-      await updateDoc(streakRef, updatedStreak as any);
-      setStreak(updatedStreak);
-      setAchievements(updateStreakAchievements(updatedStreak.currentStreak, achievements));
+      if (!hasActivityToday) {
+        console.log('No activity today, updating streak');
+        const newStreak = calculateStreak(streak.lastActivityDate);
+        const updatedStreak: Streak = {
+          ...streak,
+          currentStreak: newStreak,
+          longestStreak: Math.max(streak.longestStreak, newStreak),
+          lastActivityDate: new Date().toISOString(),
+          streakHistory: [
+            ...streak.streakHistory,
+            { date: new Date().toISOString(), action }
+          ]
+        };
+
+        console.log('Saving updated streak:', updatedStreak);
+        await updateDoc(streakRef, updatedStreak);
+        setStreak(updatedStreak);
+        setAchievements(prevAchievements => 
+          updateStreakAchievements(prevAchievements, updatedStreak.currentStreak)
+        );
+      } else {
+        console.log('Already have activity today, not updating streak');
+      }
     } catch (error) {
       console.error('Error updating streak:', error);
     }
   };
 
   return (
-    <StreakContext.Provider value={{ streak, achievements, updateStreak, isLoading }}>
+    <StreakContext.Provider value={{ streak, achievements, isLoading, updateStreak }}>
       {children}
     </StreakContext.Provider>
   );
